@@ -420,7 +420,7 @@ class sahara(metaclass=LogBase):
         '''
         return data
 
-    def dump_partitions(self, partition):
+    def dump_partitions(self, partition, no_reset=False):
         for part in partition:
             filename = part["filename"]
             desc = part["desc"]
@@ -434,10 +434,11 @@ class sahara(metaclass=LogBase):
                     print("Done dumping memory")
                 else:
                     self.error("Error dumping memory")
-        self.cmd_reset()
+        if not no_reset:
+            self.cmd_reset()
         return True
 
-    def debug_mode(self, dump_partitions=None, version=2):
+    def debug_mode(self, dump_partitions=None, version=2, no_reset=False):
         if not self.cmd_hello(sahara_mode_t.SAHARA_MODE_MEMORY_DEBUG, version=version):
             return False
         if os.path.exists("memory"):
@@ -472,7 +473,7 @@ class sahara(metaclass=LogBase):
                                 f"{filename}({desc}): Offset {hex(mem_base)}, Length {hex(length)}, " +
                                 f"SavePref {hex(save_pref)}")
 
-                        self.dump_partitions(partitions)
+                        self.dump_partitions(partitions, no_reset)
                         return True
 
                     return True
@@ -499,7 +500,7 @@ class sahara(metaclass=LogBase):
                             print(f"{filename}({desc}): Offset {hex(mem_base)}, " +
                                   f"Length {hex(length)}, SavePref {hex(save_pref)}")
 
-                        self.dump_partitions(partitions)
+                        self.dump_partitions(partitions, no_reset)
                     return True
         elif res["data"].image_tx_status:
             self.error(self.get_error_desc(res["data"].image_tx_status))
