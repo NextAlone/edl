@@ -15,7 +15,7 @@ Usage:
     edl [--gpt-num-part-entries=number] [--gpt-part-entry-size=number] [--gpt-part-entry-start-lba=number] [--portname=portname] [--serial]
     edl [--memory=memtype] [--skipstorageinit] [--maxpayload=bytes] [--sectorsize==bytes] [--portname=portname] [--serial]
     edl server [--tcpport=portnumber] [--loader=filename] [--debugmode] [--skipresponse] [--vid=vid] [--pid=pid] [--skipstorageinit] [--portname=portname] [--serial]  [--devicemodel=value]
-    edl memorydump [--partitions=partnames] [--debugmode] [--vid=vid] [--pid=pid] [--portname=portname] [--serial] [--serial_number=serial_number] [--no-reset]
+    edl memorydump [--partitions=partnames] [--debugmode] [--vid=vid] [--pid=pid] [--portname=portname] [--serial] [--serial_number=serial_number] [--no-reset] [--quiet]
     edl printgpt [--memory=memtype] [--lun=lun] [--sectorsize==bytes] [--loader=filename] [--debugmode]  [--skipresponse] [--vid=vid] [--pid=pid] [--skipstorageinit] [--portname=portname] [--serial] [--devicemodel=value]
     edl gpt <directory> [--memory=memtype] [--lun=lun] [--genxml] [--loader=filename]  [--skipresponse] [--debugmode] [--vid=vid] [--pid=pid] [--skipstorageinit] [--portname=portname] [--serial] [--devicemodel=value]
     edl r <partitionname> <filename> [--memory=memtype] [--sectorsize==bytes] [--lun=lun] [--loader=filename]  [--skipresponse] [--debugmode] [--vid=vid] [--pid=pid] [--skipstorageinit] [--portname=portname] [--serial] [--devicemodel=value]
@@ -167,6 +167,7 @@ class main(metaclass=LogBase):
         self.pid = None
         self.serial_number = None
         self.no_reset = False
+        self.quiet = False
         self.args = args
         self.fh = None
 
@@ -291,6 +292,8 @@ class main(metaclass=LogBase):
             self.cdc = usb_class(portconfig=portconfig, loglevel=self.__logger.level, serial_number=self.serial_number)
         if args["--no-reset"]:
             self.no_reset = True
+        if args["--quiet"]:
+            self.quiet = True
 
         self.sahara = sahara(self.cdc, loglevel=self.__logger.level)
 
@@ -320,9 +323,9 @@ class main(metaclass=LogBase):
                             time.sleep(0.5)
                             print("Device is in memory dump mode, dumping memory")
                             if self.args["--partitions"]:
-                                self.sahara.debug_mode(self.args["--partitions"].split(","), version=version, no_reset=self.no_reset)
+                                self.sahara.debug_mode(self.args["--partitions"].split(","), version=version, no_reset=self.no_reset, quiet=self.quiet)
                             else:
-                                self.sahara.debug_mode(version=version, no_reset=self.no_reset)
+                                self.sahara.debug_mode(version=version, no_reset=self.no_reset, quiet=self.quiet)
                             return self.exit()
                         else:
                             print("Device is in streaming mode, uploading loader")

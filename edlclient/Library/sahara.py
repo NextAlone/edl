@@ -420,7 +420,7 @@ class sahara(metaclass=LogBase):
         '''
         return data
 
-    def dump_partitions(self, partition, no_reset=False):
+    def dump_partitions(self, partition, no_reset=False, quiet=False):
         for part in partition:
             filename = part["filename"]
             desc = part["desc"]
@@ -429,7 +429,7 @@ class sahara(metaclass=LogBase):
             print(f"Dumping {filename}({desc}) at {hex(mem_base)}, length {hex(length)}")
             fname = os.path.join("memory", filename)
             with open(fname, "wb") as wf:
-                self.read_memory(mem_base, length, True, wf)
+                self.read_memory(mem_base, length, not quiet, wf)
                 if wf.tell() == length:
                     print("Done dumping memory")
                 else:
@@ -438,7 +438,7 @@ class sahara(metaclass=LogBase):
             self.cmd_reset()
         return True
 
-    def debug_mode(self, dump_partitions=None, version=2, no_reset=False):
+    def debug_mode(self, dump_partitions=None, version=2, no_reset=False, quiet=False):
         if not self.cmd_hello(sahara_mode_t.SAHARA_MODE_MEMORY_DEBUG, version=version):
             return False
         if os.path.exists("memory"):
@@ -473,7 +473,7 @@ class sahara(metaclass=LogBase):
                                 f"{filename}({desc}): Offset {hex(mem_base)}, Length {hex(length)}, " +
                                 f"SavePref {hex(save_pref)}")
 
-                        self.dump_partitions(partitions, no_reset)
+                        self.dump_partitions(partitions, no_reset, quiet)
                         return True
 
                     return True
@@ -500,7 +500,7 @@ class sahara(metaclass=LogBase):
                             print(f"{filename}({desc}): Offset {hex(mem_base)}, " +
                                   f"Length {hex(length)}, SavePref {hex(save_pref)}")
 
-                        self.dump_partitions(partitions, no_reset)
+                        self.dump_partitions(partitions, no_reset, quiet)
                     return True
         elif res["data"].image_tx_status:
             self.error(self.get_error_desc(res["data"].image_tx_status))
