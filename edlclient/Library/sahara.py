@@ -434,6 +434,18 @@ class sahara(metaclass=LogBase):
                     print("Done dumping memory")
                 else:
                     self.error("Error dumping memory")
+                    raise Exception(f"Error dumping memory: {filename}, expected {hex(length)}, got {hex(wf.tell())}")
+            try:
+                if filename.startswith("DDRCS"):
+                    fsize = os.path.getsize(fname)
+                    if fsize < int("0x80000000", 16) * 0.9:
+                        self.error(f"Error dumping {filename} partition, expected size {hex(int('0x80000000', 16))}, got {hex(fsize)}")
+                        raise RuntimeError(f"Error dumping {filename} partition, expected size {hex(int('0x80000000', 16))}, got {hex(fsize)}")
+            except RuntimeError:
+                raise
+            except Exception as e:  # pylint: disable=broad-except
+                self.error(str(e))
+
         if not no_reset:
             self.cmd_reset()
         return True
@@ -472,6 +484,9 @@ class sahara(metaclass=LogBase):
                             print(
                                 f"{filename}({desc}): Offset {hex(mem_base)}, Length {hex(length)}, " +
                                 f"SavePref {hex(save_pref)}")
+                            if filename.startswith("DDRCS") and length < int("0x80000000", 16) * 0.9:
+                                self.error(f"Error loading DDRCS partition, expected size {hex(int('0x80000000', 16))}, got {hex(length)}")
+                                raise RuntimeError(f"Error loading DDRCS partition, expected size {hex(int('0x80000000', 16))}, got {hex(length)}")
 
                         self.dump_partitions(partitions, no_reset, quiet)
                         return True
